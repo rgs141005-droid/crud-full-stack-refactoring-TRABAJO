@@ -31,6 +31,14 @@ function handlePost($conn)
 {
     $input = json_decode(file_get_contents("php://input"), true);
 
+$existing = getSubjectByName($conn, $input['name']);
+    if ($existing) {
+        http_response_code(409); // Conflict
+        echo json_encode(["error" => "Ya existe una materia con ese nombre"]);
+        return;
+    }
+   else {
+
     $result = createSubject($conn, $input['name']);
     if ($result['inserted'] > 0) 
     {
@@ -40,6 +48,7 @@ function handlePost($conn)
     {
         http_response_code(500);
         echo json_encode(["error" => "No se pudo crear"]);
+    }
     }
 }
 

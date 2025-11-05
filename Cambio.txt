@@ -1,0 +1,27 @@
+1-Funcion que llama a la funcion que valida el nombre (va en subjectControllers):
+
+$existing = getSubjectByName($conn, $input['name']);
+    if ($existing) {
+        http_response_code(409); // Conflict
+        echo json_encode(["error" => "Ya existe una materia con ese nombre"]);
+        return;
+    }
+
+2-Fucion que valida si existe el nombre de la materia (va en subject):
+
+function getSubjectByName($conn, $name)
+{
+    $name = trim($name);
+    if ($name === '') return null;
+
+    $stmt = $conn->prepare("SELECT * FROM subjects WHERE name = ? LIMIT 1");
+    if (!$stmt) return null;
+
+    $stmt->bind_param("s", $name);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    $subject = $result->fetch_assoc();
+    $stmt->close();
+
+    return $subject ? $subject : null;
+}
