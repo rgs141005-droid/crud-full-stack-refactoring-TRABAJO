@@ -135,18 +135,24 @@ function fillForm(student)
     document.getElementById('age').value = student.age;
 }
   
-async function confirmDelete(id) 
-{
-    if (!confirm('¿Estás seguro que deseas borrar este estudiante?')) return;
-  
-    try 
-    {
-        await studentsAPI.remove(id);
-        loadStudents();
-    } 
-    catch (err) 
-    {
-        console.error('Error al borrar:', err.message);
+async function confirmDelete(studentId, studentName) {
+    if (!confirm(`¿Eliminar al estudiante "${studentName}"?`)) return;
+
+    try {
+        await studentsAPI.remove(studentId);
+        await loadStudents();
+    } catch (err) {
+        const body = err.body || { error: err.message || 'Error' };
+
+        if (body.assignments && Array.isArray(body.assignments) && body.assignments.length > 0) {
+            const list = body.assignments.map(a => {
+                return `- ${a.subject_name ?? a.name ?? ('ID:' + (a.subject_id ?? a.id ?? '?'))}`;
+            }).join('\n');
+
+            alert(`No se puede eliminar el estudiante porque tiene las siguientes asignaciones:\n\n${list}`);
+        } else {
+            alert(body.error || 'Ocurrió un error al intentar eliminar el estudiante');
+        }
     }
 }
   

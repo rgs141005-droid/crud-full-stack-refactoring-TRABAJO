@@ -1,0 +1,134 @@
+líneas 3, 64, 92
+
+en studentsController.php funcion handleDelete
+
+function handleDelete($conn) 
+{
+    $input = json_decode(file_get_contents("php://input"), true);
+
+    $result = deleteStudent($conn, $input['id']);
+    if ($result['deleted'] > 0) 
+    {
+        echo json_encode(["message" => "Eliminado correctamente"]);
+    } 
+    else 
+    {
+        http_response_code(500);
+        echo json_encode(["error" => "No se pudo eliminar"]);
+    }
+
+    // ---------------------------
+
+    // agregado
+    // Obtener id (puede venir por query string ?id=)
+    if (!isset($_GET['id'])) {
+        http_response_code(400);
+        echo json_encode(["error" => "Falta el id del estudiante"]);
+        return;
+    }
+
+    $id = intval($_GET['id']);
+
+    // Verificar si el estudiante tiene asignaciones
+    require_once __DIR__ . '/../repositories/studentsSubjects.php';
+    $assignments = getSubjectsByStudent($conn, $id); // debe devolver array vacío si no hay
+
+    if (!empty($assignments)) {
+        http_response_code(400);
+        echo json_encode([
+            "error" => "No se puede borrar el estudiante: tiene asignaciones",
+            "assignments" => $assignments
+        ]);
+        return;
+    }
+
+    // Si no tiene asignaciones, proceder a borrar
+    require_once __DIR__ . '/../repositories/students.php';
+    $deleted = deleteStudent($conn, $id);
+
+    if ($deleted) {
+        http_response_code(200);
+        echo json_encode(["message" => "Estudiante eliminado correctamente"]);
+    } else {
+        http_response_code(500);
+        echo json_encode(["error" => "No se pudo eliminar el estudiante"]);
+    }
+}
+
+   
+
+
+
+
+
+en apiFactory.js en línea 24
+original:
+
+if (!res.ok) throw new Error(`Error en ${method}`);
+        return await res.json();
+
+actual:
+
+if (!res.ok) {
+    // Intentar leer el JSON de error del backend
+    let errBody = { error: res.statusText };
+    try {
+        errBody = await res.json();
+    } catch (e) {
+        // Si no es JSON válido, usar el texto de estado HTTP
+    }
+    // Lanzar el error con el cuerpo para que el caller lo capture
+    const error = new Error(errBody.error || `Error en ${method}`);
+    error.body = errBody;
+    error.status = res.status;
+    throw error;
+}
+
+
+
+
+
+
+en studentsController.js en la función confirmDelete, cambios:
+
+original:
+
+async function confirmDelete(id) 
+{
+    if (!confirm('¿Estás seguro que deseas borrar este estudiante?')) return;
+  
+    try 
+    {
+        await studentsAPI.remove(id);
+        loadStudents();
+    } 
+    catch (err) 
+    {
+        console.error('Error al borrar:', err.message);
+    }
+}
+
+
+
+actual:
+
+async function confirmDelete(studentId, studentName) {
+    if (!confirm(`¿Eliminar al estudiante "${studentName}"?`)) return;
+
+    try {
+        await studentsAPI.remove(studentId);
+        await loadStudents();
+    } catch (err) {
+        const body = err.body || { error: err.message || 'Error' };
+
+        if (body.assignments && Array.isArray(body.assignments) && body.assignments.length > 0) {
+            const list = body.assignments.map(a => {
+                return `- ${a.subject_name ?? a.name ?? ('ID:' + (a.subject_id ?? a.id ?? '?'))}`;
+            }).join('\n');
+
+            alert(`No se puede eliminar el estudiante porque tiene las siguientes asignaciones:\n\n${list}`);
+        } else {
+            alert(body.error || 'Ocurrió un error al intentar eliminar el estudiante');
+        }
+    }
+}
