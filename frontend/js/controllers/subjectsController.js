@@ -205,7 +205,7 @@ async function onNameInput(e) {
         setError('Viendo si se puede');
         const available = await isNameAvailable(name, currentEditingId);
         if (!available) {
-            setError('Ese nombre ya esta siendo usado, busca otro');
+            setError('Ese nombre ya esta siendo usado ❌, busca otro');
         } else {
             clearError();
         }
