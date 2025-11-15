@@ -184,7 +184,8 @@ function setError(msg) {
     const errSpan = document.getElementById('nameError');
     if (errSpan) errSpan.textContent = msg || '';
 
-    
+    const submitBtn = document.querySelector('#subjectForm button[type="submit"]');
+    if (submitBtn) submitBtn.disabled = !!msg;
 }
 
 function clearError() {
