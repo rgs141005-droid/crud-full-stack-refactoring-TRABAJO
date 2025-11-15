@@ -202,10 +202,10 @@ async function onNameInput(e) {
 
     clearTimeout(debounceTimer);
     debounceTimer = setTimeout(async () => {
-        setError('Comprobando disponibilidad...');
+        setError('Viendo si se puede');
         const available = await isNameAvailable(name, currentEditingId);
         if (!available) {
-            setError('Ya existe una materia con ese nombre');
+            setError('Ese nombre ya esta siendo usado, busca otro');
         } else {
             clearError();
         }
