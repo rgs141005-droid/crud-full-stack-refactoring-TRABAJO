@@ -63,30 +63,18 @@ function handleDelete($conn)
 {
     $input = json_decode(file_get_contents("php://input"), true);
 
-    $result = deleteStudent($conn, $input['id']);
-    if ($result['deleted'] > 0) 
-    {
-        echo json_encode(["message" => "Eliminado correctamente"]);
-    } 
-    else 
-    {
-        http_response_code(500);
-        echo json_encode(["error" => "No se pudo eliminar"]);
-    }
-
-    // agregado
-    // Obtener id (puede venir por query string ?id=)
-    if (!isset($_GET['id'])) {
+    // Validar que viene el id
+    if (!isset($input['id'])) {
         http_response_code(400);
         echo json_encode(["error" => "Falta el id del estudiante"]);
         return;
     }
 
-    $id = intval($_GET['id']);
+    $id = intval($input['id']);
 
-    // Verificar si el estudiante tiene asignaciones
+    // Verificar si el estudiante tiene asignaciones ANTES de borrar
     require_once __DIR__ . '/../repositories/studentsSubjects.php';
-    $assignments = getSubjectsByStudent($conn, $id); // debe devolver array vacío si no hay
+    $assignments = getSubjectsByStudent($conn, $id);
 
     if (!empty($assignments)) {
         http_response_code(400);
@@ -98,15 +86,15 @@ function handleDelete($conn)
     }
 
     // Si no tiene asignaciones, proceder a borrar
-    require_once __DIR__ . '/../repositories/students.php';
-    $deleted = deleteStudent($conn, $id);
-
-    if ($deleted) {
-        http_response_code(200);
-        echo json_encode(["message" => "Estudiante eliminado correctamente"]);
-    } else {
+    $result = deleteStudent($conn, $id);
+    if ($result['deleted'] > 0) 
+    {
+        echo json_encode(["message" => "Eliminado correctamente"]);
+    } 
+    else 
+    {
         http_response_code(500);
-        echo json_encode(["error" => "No se pudo eliminar el estudiante"]);
+        echo json_encode(["error" => "No se pudo eliminar"]);
     }
 }
 ?>
