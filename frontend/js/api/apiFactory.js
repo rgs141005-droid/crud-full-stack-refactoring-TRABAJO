@@ -21,16 +21,32 @@ export function createAPI(moduleName, config = {})
             body: JSON.stringify(data)
         });
 
-        if (!res.ok) throw new Error(`Error en ${method}`);
-        return await res.json();
+        const text = await res.text();
+        let payload = null;
+        try { payload = text ? JSON.parse(text) : null; } catch (e) { payload = null; }
+
+        if (!res.ok) {
+            const msg = payload?.error ?? payload?.message ?? res.statusText ?? `Error en ${method}`;
+            throw new Error(msg);
+        }
+
+        return payload;
     }
 
     return {
         async fetchAll()
         {
             const res = await fetch(API_URL);
-            if (!res.ok) throw new Error("No se pudieron obtener los datos");
-            return await res.json();
+            const text = await res.text();
+            let payload = null;
+            try { payload = text ? JSON.parse(text) : null; } catch (e) { payload = null; }
+
+            if (!res.ok) {
+                const msg = payload?.error ?? payload?.message ?? res.statusText ?? "No se pudieron obtener los datos";
+                throw new Error(msg);
+            }
+
+            return payload;
         },
         async create(data)
         {

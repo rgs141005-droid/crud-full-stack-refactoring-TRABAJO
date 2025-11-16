@@ -130,6 +130,9 @@ async function confirmDeleteSubject(id)
     }
     catch (err)
     {
+
+        alert(err.message);
         console.error('Error al borrar materia:', err.message);
     }
 }
+
