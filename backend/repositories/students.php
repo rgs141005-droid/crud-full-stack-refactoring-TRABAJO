@@ -27,9 +27,23 @@ function getStudentById($conn, $id)
     //fetch_assoc() devuelve un array asociativo ya listo para convertir en JSON de una fila:
     return $result->fetch_assoc(); 
 }
+function getStudentByEmail($conn, $email)
+{
+    $stmt = $conn->prepare("SELECT * FROM students WHERE email = ? LIMIT 1");
+    $stmt->bind_param("s", $email);
+    $stmt->execute();
+    $res = $stmt->get_result();
+    return $res->fetch_assoc();
+}
 
 function createStudent($conn, $fullname, $email, $age) 
 {
+    // Validar email existente antes de insertar
+    $existing = getStudentByEmail($conn, $email);
+    if ($existing) {
+        return ['inserted' => 0, 'error' => 'email_exists'];
+    }
+
     $sql = "INSERT INTO students (fullname, email, age) VALUES (?, ?, ?)";
     $stmt = $conn->prepare($sql);
     $stmt->bind_param("ssi", $fullname, $email, $age);
@@ -46,6 +60,15 @@ function createStudent($conn, $fullname, $email, $age)
 
 function updateStudent($conn, $id, $fullname, $email, $age) 
 {
+    // Validar que el email no pertenezca a otro estudiante
+    $stmt = $conn->prepare("SELECT id FROM students WHERE email = ? AND id != ? LIMIT 1");
+    $stmt->bind_param("si", $email, $id);
+    $stmt->execute();
+    $res = $stmt->get_result();
+    if ($res->fetch_assoc()) {
+        return ['updated' => 0, 'error' => 'email_exists'];
+    }
+
     $sql = "UPDATE students SET fullname = ?, email = ?, age = ? WHERE id = ?";
     $stmt = $conn->prepare($sql);
     $stmt->bind_param("ssii", $fullname, $email, $age, $id);

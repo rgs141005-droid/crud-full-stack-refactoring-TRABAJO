@@ -10,6 +10,8 @@
 
 import { studentsAPI } from '../api/studentsAPI.js';
 
+let currentStudents = [];
+
 document.addEventListener('DOMContentLoaded', () => 
 {
     loadStudents();
@@ -33,6 +35,14 @@ function setupFormHandler()
             } 
             else 
             {
+                // Validación en frontend: verificar email duplicado
+                const exists = currentStudents.some(s => s.email && s.email.toLowerCase() === student.email.toLowerCase());
+                if (exists) {
+                    // Mostrar mensaje personalizado en modal
+                    showErrorModal('Este email ya está siendo utilizado');
+                    return;
+                }
+
                 await studentsAPI.create(student);
             }
             clearForm();
@@ -40,7 +50,14 @@ function setupFormHandler()
         }
         catch (err)
         {
-            console.error(err.message);
+            // Mostrar mensaje de error al usuario
+            // Si el error proviene del backend por correo duplicado, mostrar mensaje específico
+            const msg = (err && err.message) ? err.message.toLowerCase() : '';
+            if (msg.includes('correo') || msg.includes('email')) {
+                showErrorModal('Este email ya está siendo utilizado');
+            } else {
+                showErrorModal(err.message || 'Ocurrió un error');
+            }
         }
     });
 }
@@ -52,6 +69,20 @@ function setupCancelHandler()
     {
         document.getElementById('studentId').value = '';
     });
+}
+
+// Mostrar modal de error personalizado
+function showErrorModal(message)
+{
+    const modal = document.getElementById('errorModal');
+    const msg = document.getElementById('errorModalMessage');
+    msg.textContent = message;
+    modal.style.display = 'block';
+
+    // Cerrar solo con el botón
+    const btnClose = document.getElementById('errorModalBtnClose');
+    const hide = () => modal.style.display = 'none';
+    btnClose.onclick = hide;
 }
   
 function getFormData()
@@ -75,7 +106,8 @@ async function loadStudents()
     try 
     {
         const students = await studentsAPI.fetchAll();
-        renderStudentTable(students);
+        currentStudents = students || [];
+        renderStudentTable(currentStudents);
     } 
     catch (err) 
     {

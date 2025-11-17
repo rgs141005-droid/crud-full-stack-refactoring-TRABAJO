@@ -21,7 +21,18 @@ export function createAPI(moduleName, config = {})
             body: JSON.stringify(data)
         });
 
-        if (!res.ok) throw new Error(`Error en ${method}`);
+        if (!res.ok) {
+            // Intentar parsear mensaje de error devuelto por el servidor
+            let errMsg = `Error en ${method} - ${res.status}`;
+            try {
+                const body = await res.json();
+                errMsg = body.error || body.message || errMsg;
+            } catch (e) {
+                // ignore parse error
+            }
+            throw new Error(errMsg);
+        }
+
         return await res.json();
     }
 
