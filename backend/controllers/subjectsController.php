@@ -63,16 +63,16 @@ function handleDelete($conn)
 {
     $input = json_decode(file_get_contents("php://input"), true);
    // mofificacion  
-    $count = countStudentsBySubject($conn, $input['id']);
+    $count = countStudentsBySubject($conn, $input['id']);//cuenta cuantos alumnos hay en la materia 
     
     if ($count > 0) 
     {
         http_response_code(400);
         echo json_encode(["error" => "Hay alumnos en esta materia"]);
         return;
-    }
+    }// si hay alumnos, no deja borrar.
     
-    $result = deleteSubject($conn, $input['id']);
+    $result = deleteSubject($conn, $input['id']);//elimina la materia 
     if ($result['deleted'] > 0) 
     {
         echo json_encode(["message" => "Materia eliminada correctamente"]);

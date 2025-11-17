@@ -9,6 +9,8 @@
 */
 
 import { subjectsAPI } from '../api/subjectsAPI.js';
+//agregado para la validacion de borrado
+import { studentsSubjectsAPI } from '../api/studentsSubjectsAPI.js';
 
 document.addEventListener('DOMContentLoaded', () => 
 {
@@ -125,7 +127,16 @@ async function confirmDeleteSubject(id)
 
     try
     {
-        await subjectsAPI.remove(id);
+        // Validación en frontend: comprobar si existen inscripciones a la materia
+        const assignments = await studentsSubjectsAPI.fetchAll();//trae todas las inscripciones (relación alumno–materia).
+        const hasAssignments = assignments.some(a => String(a.subject_id) === String(id));//verifica que la materia tenga inscripciones.
+
+        if (hasAssignments) {
+            alert('No se puede borrar la materia: hay alumnos inscriptos.');
+            return;
+        }
+
+        await subjectsAPI.remove(id);//Va hacia el backend para borrar la materia seleccionada
         loadSubjects();
     }
     catch (err)
