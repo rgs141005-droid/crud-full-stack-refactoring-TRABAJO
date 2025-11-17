@@ -10,7 +10,7 @@
 
 import { studentsAPI } from '../api/studentsAPI.js';
 
-let currentStudents = [];
+let currentStudents = [];  // agregado 
 
 document.addEventListener('DOMContentLoaded', () => 
 {
