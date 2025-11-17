@@ -17,6 +17,33 @@ document.addEventListener('DOMContentLoaded', () =>
     setupCancelHandler();
 });
 
+// Modal helper: muestra un mensaje personalizado y centrado
+function showMessage(title, message)
+{
+    const modal = document.getElementById('messageModal');
+    if (!modal) {
+        alert(message);
+        return;
+    }
+
+    const titleEl = document.getElementById('modalTitle');
+    const msgEl = document.getElementById('modalMessage');
+    const closeBtn = document.getElementById('modalClose');
+
+    titleEl.textContent = title || 'Mensaje';
+    msgEl.textContent = message || '';
+
+    const hide = () => modal.style.display = 'none';
+
+    // botón cerrar (en la cabecera) a la derecha
+    if (closeBtn) closeBtn.onclick = hide;
+
+    // cerrar al hacer click fuera del contenido
+    modal.onclick = function(evt) { if (evt.target === modal) hide(); };
+
+    modal.style.display = 'block';
+}
+
 function setupSubjectFormHandler() 
 {
   const form = document.getElementById('subjectForm');
@@ -33,10 +60,28 @@ function setupSubjectFormHandler()
         {
             if (subject.id) 
             {
+                // Al editar, validar que no exista otra materia con el mismo nombre
+                const existingSubjects = await subjectsAPI.fetchAll();
+                const exists = existingSubjects.some(s => s.name && s.name.toLowerCase() === subject.name.toLowerCase() && String(s.id) !== String(subject.id));
+                if (exists)
+                {
+                    showMessage('Error', 'Esta materia ya existe');
+                    return;
+                }
+
                 await subjectsAPI.update(subject);
             }
             else
             {
+                // Validación frontend: evitar crear materia con nombre ya existente (insensible a mayúsculas)
+                const existingSubjects = await subjectsAPI.fetchAll();
+                const exists = existingSubjects.some(s => s.name && s.name.toLowerCase() === subject.name.toLowerCase());
+                if (exists)
+                {
+                    showMessage('Error', 'La materia que quiere crear ya existe');
+                    return;
+                }
+
                 await subjectsAPI.create(subject);
             }
             
@@ -47,6 +92,7 @@ function setupSubjectFormHandler()
         catch (err)
         {
             console.error(err.message);
+            showMessage('Error', err.message || 'Ocurrió un error');
         }
   });
 }

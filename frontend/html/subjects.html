@@ -46,5 +46,21 @@
     <a class="w3-btn w3-black" href="../../index.html">Volver al Panel Principal</a>
   </footer>
   
+  <!-- Mensaje modal centrado -->
+  <div id="messageModal" class="w3-modal">
+    <div class="w3-modal-content w3-animate-top w3-card-4" style="max-width:400px;margin:auto">
+      <header class="w3-container w3-blue" style="position:relative;">
+        <h3 id="modalTitle">Mensaje</h3>
+        <!-- Botón de cerrar a la derecha (cruz), pegado al borde -->
+        <button id="modalClose" class="w3-button" style="position:absolute; right:0; top:0;" aria-label="Cerrar" title="Cerrar">&times;</button>
+      </header>
+
+      <div class="w3-container" id="modalBody">
+        <p id="modalMessage">Contenido</p>
+      </div>
+      <!-- Footer eliminado según pedido (se quitó la barra gris de abajo) -->
+    </div>
+  </div>
+  
 </body>
 </html>
