@@ -16,6 +16,19 @@ function getAllSubjects($conn)
     return $conn->query($sql)->fetch_all(MYSQLI_ASSOC);
 }
 
+
+
+function getSubjectByName($conn, $name) 
+{
+    $sql = "SELECT * FROM subjects WHERE name = ?";
+    $stmt = $conn->prepare($sql);
+    $stmt->bind_param("s", $name);
+    $stmt->execute();
+    $result = $stmt->get_result();
+
+    return $result->fetch_assoc(); 
+}
+
 function getSubjectById($conn, $id) 
 {
     $sql = "SELECT * FROM subjects WHERE id = ?";

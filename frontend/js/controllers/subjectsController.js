@@ -10,11 +10,16 @@
 
 import { subjectsAPI } from '../api/subjectsAPI.js';
 
+let debounceTimer = null;
+let currentEditingId = '';
+let originalName = '';
+
 document.addEventListener('DOMContentLoaded', () => 
 {
     loadSubjects();
     setupSubjectFormHandler();
     setupCancelHandler();
+    setupNameValidation();
 });
 
 function setupSubjectFormHandler() 
@@ -28,6 +33,21 @@ function setupSubjectFormHandler()
             id: document.getElementById('subjectId').value.trim(),
             name: document.getElementById('name').value.trim()
         };
+
+        const localErr = validateLocal(subject.name);
+        if (localErr) 
+        {
+            setError(localErr);
+            return;
+        }
+
+        // Comprobación rápida de unicidad (si no es el mismo registro en edición)
+        const available = await isNameAvailable(subject.name, subject.id);
+        if (!available) 
+        {
+            setError('Ya existe una materia con ese nombre');
+            return;
+        }
 
         try 
         {
@@ -131,5 +151,77 @@ async function confirmDeleteSubject(id)
     catch (err)
     {
         console.error('Error al borrar materia:', err.message);
+    }
+}
+
+//
+
+function setupNameValidation() {
+    const nameInput = document.getElementById('name');
+    nameInput.addEventListener('input', onNameInput);
+    // crear elemento para mostrar error si no existe
+    if (!document.getElementById('nameError')) {
+        const err = document.createElement('span');
+        err.id = 'nameError';
+        err.style.color = 'red';
+        nameInput.parentNode.appendChild(err);
+    }
+    clearError();
+}
+
+function normalizeName(s) {
+    return (s || '').trim();
+}
+
+function validateLocal(name) {
+    if (!name) return 'El nombre es obligatorio';
+    if (name.length < 3) return 'Mínimo 3 caracteres';
+    if (name.length > 100) return 'Máximo 100 caracteres';
+    return '';
+}
+
+function setError(msg) {
+    const errSpan = document.getElementById('nameError');
+    if (errSpan) errSpan.textContent = msg || '';
+
+    const submitBtn = document.querySelector('#subjectForm button[type="submit"]');
+    if (submitBtn) submitBtn.disabled = !!msg;
+}
+
+function clearError() {
+    setError('');
+}
+
+async function onNameInput(e) {
+    const raw = e.target.value;
+    const name = normalizeName(raw);
+    const localErr = validateLocal(name);
+    if (localErr) {
+        setError(localErr);
+        return;
+    }
+
+    clearTimeout(debounceTimer);
+    debounceTimer = setTimeout(async () => {
+        setError('Viendo si se puede');
+        const available = await isNameAvailable(name, currentEditingId);
+        if (!available) {
+            setError('Ese nombre ya esta siendo usado ❌, busca otro');
+        } else {
+            clearError();
+        }
+    }, 350);
+}
+
+
+async function isNameAvailable(name, editingId = '') {
+    try {
+        const all = await subjectsAPI.fetchAll();
+        const lower = name.toLowerCase();
+        return !all.some(s => s.name && s.name.toLowerCase() === lower && s.id !== editingId);
+    } catch (err) {
+
+        console.error('Error verificando nombre:', err);
+        return false;
     }
 }

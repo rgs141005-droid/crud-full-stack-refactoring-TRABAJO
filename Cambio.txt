@@ -1,0 +1,115 @@
+1-Funcion que llama a la funcion que valida el nombre (va en subjectControllers):
+
+$existing = getSubjectByName($conn, $input['name']);
+    if ($existing) {
+        http_response_code(409); // Conflict
+        echo json_encode(["error" => "Ya existe una materia con ese nombre"]);
+        return;
+    }
+
+2-Fucion que valida si existe el nombre de la materia (va en repositories: subject):
+
+function getSubjectByName($conn, $name)
+{
+    $name = trim($name);
+    if ($name === '') return null;
+
+    $stmt = $conn->prepare("SELECT * FROM subjects WHERE name = ? LIMIT 1");
+    if (!$stmt) return null;
+
+    $stmt->bind_param("s", $name);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    $subject = $result->fetch_assoc();
+    $stmt->close();
+
+    return $subject ? $subject : null;
+}
+
+3-Cambios para la validacion frontend (Front:js:subject)
+
+let debounceTimer = null;
+let currentEditingId = '';
+let originalName = '';
+
+setupNameValidation();
+
+ const localErr = validateLocal(subject.name);
+      if (localErr) 
+ {
+ setError(localErr);
+    return;
+   }
+
+function setupNameValidation() {
+    const nameInput = document.getElementById('name');
+    nameInput.addEventListener('input', onNameInput);
+    // crear elemento para mostrar error si no existe
+    if (!document.getElementById('nameError')) {
+        const err = document.createElement('span');
+        err.id = 'nameError';
+        err.style.color = 'red';
+        nameInput.parentNode.appendChild(err);
+    }
+    clearError();
+}
+
+function normalizeName(s) {
+    return (s || '').trim();
+}
+
+function validateLocal(name) {
+    if (!name) return 'El nombre es obligatorio';
+    if (name.length < 3) return 'Mínimo 3 caracteres';
+    if (name.length > 100) return 'Máximo 100 caracteres';
+    return '';
+}
+
+function setError(msg) {
+    const errSpan = document.getElementById('nameError');
+    if (errSpan) errSpan.textContent = msg || '';
+
+    const submitBtn = document.querySelector('#subjectForm button[type="submit"]');
+    if (submitBtn) submitBtn.disabled = !!msg;
+}
+
+function clearError() {
+    setError('');
+}
+
+async function onNameInput(e) {
+    const raw = e.target.value;
+    const name = normalizeName(raw);
+    const localErr = validateLocal(name);
+    if (localErr) {
+        setError(localErr);
+        return;
+    }
+
+    clearTimeout(debounceTimer);
+    debounceTimer = setTimeout(async () => {
+        setError('Viendo si se puede');
+        const available = await isNameAvailable(name, currentEditingId);
+        if (!available) {
+            setError('Ese nombre ya esta siendo usado ❌, busca otro');
+        } else {
+            clearError();
+        }
+    }, 350);
+}
+
+
+async function isNameAvailable(name, editingId = '') {
+    try {
+        const all = await subjectsAPI.fetchAll();
+        const lower = name.toLowerCase();
+        return !all.some(s => s.name && s.name.toLowerCase() === lower && s.id !== editingId);
+    } catch (err) {
+
+        console.error('Error verificando nombre:', err);
+        return false;
+    }turn;
+ }
+4-html
+
+<span id="nameError" style="color:red"></span>
