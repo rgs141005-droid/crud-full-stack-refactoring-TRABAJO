@@ -12,3 +12,47 @@ form input, form button {
     padding: 10px;
     margin-top: 10px;
 }
+
+/* Modal personalizado para mensaje de error */
+#messageModal .w3-modal-content {
+    padding: 0;
+}
+#messageModal #modalTitle,
+#messageModal #modalMessage {
+    text-align: center;
+    text-transform: uppercase;
+}
+
+/* Quitar barra gris inferior: ya eliminada en HTML; asegurar padding consistente */
+#messageModal #modalBody {
+    padding: 20px;
+}
+
+#messageModal header h3 {
+    margin: 0;
+    padding: 12px 40px 12px 12px; /* leave room for close button */
+}
+
+/* Botón cerrar en header, pequeño y a la derecha */
+#modalClose {
+    background: #ffffff;
+    color: #000000;
+    border: none;
+    font-weight: bold;
+    padding: 8px 12px;
+    margin: 0;
+    border-left: 1px solid rgba(0,0,0,0.08);
+    box-shadow: none;
+    border-radius: 0;
+    cursor: pointer;
+}
+
+/* Ajustes para que la 'x' se vea centrada y pequeña */
+#modalClose {
+    font-size: 18px;
+    line-height: 1;
+    padding: 6px 10px;
+}
+
+/* Asegurar que el modal esté centrado verticalmente */
+.w3-modal-content { top: 20%; }

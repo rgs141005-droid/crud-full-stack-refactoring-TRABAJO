@@ -32,7 +32,6 @@ export function createAPI(moduleName, config = {})
             }
             throw new Error(errMsg);
         }
-
         return await res.json();
     }
 
