@@ -63,7 +63,30 @@ function handleDelete($conn)
 {
     $input = json_decode(file_get_contents("php://input"), true);
 
-    $result = deleteStudent($conn, $input['id']);
+    // Validar que viene el id
+    if (!isset($input['id'])) {
+        http_response_code(400);
+        echo json_encode(["error" => "Falta el id del estudiante"]);
+        return;
+    }
+
+    $id = intval($input['id']);
+
+    // Verificar si el estudiante tiene asignaciones ANTES de borrar
+    require_once __DIR__ . '/../repositories/studentsSubjects.php';
+    $assignments = getSubjectsByStudent($conn, $id);
+
+    if (!empty($assignments)) {
+        http_response_code(400);
+        echo json_encode([
+            "error" => "No se puede borrar el estudiante: tiene asignaciones",
+            "assignments" => $assignments
+        ]);
+        return;
+    }
+
+    // Si no tiene asignaciones, proceder a borrar
+    $result = deleteStudent($conn, $id);
     if ($result['deleted'] > 0) 
     {
         echo json_encode(["message" => "Eliminado correctamente"]);
