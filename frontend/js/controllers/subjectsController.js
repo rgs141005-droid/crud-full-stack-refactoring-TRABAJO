@@ -9,10 +9,10 @@
 */
 
 import { subjectsAPI } from '../api/subjectsAPI.js';
+import { studentsSubjectsAPI } from '../api/studentsSubjectsAPI.js';
 
 let debounceTimer = null;
 let currentEditingId = '';
-let originalName = '';
 
 document.addEventListener('DOMContentLoaded', () => 
 {
@@ -145,16 +145,25 @@ async function confirmDeleteSubject(id)
 
     try
     {
+        // Validación en frontend: comprobar si existen inscripciones a la materia
+        const assignments = await studentsSubjectsAPI.fetchAll();
+        const hasAssignments = assignments.some(a => String(a.subject_id) === String(id));
+
+        if (hasAssignments) {
+            alert('No se puede borrar la materia: hay alumnos inscriptos.');
+            return;
+        }
+
         await subjectsAPI.remove(id);
         loadSubjects();
     }
     catch (err)
     {
+        alert(err.message);
         console.error('Error al borrar materia:', err.message);
     }
 }
 
-//
 
 function setupNameValidation() {
     const nameInput = document.getElementById('name');
