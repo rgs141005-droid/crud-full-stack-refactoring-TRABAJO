@@ -15,7 +15,13 @@ function handleGet($conn)
 {
     $input = json_decode(file_get_contents("php://input"), true);
 
-    if (isset($input['id'])) 
+    if (isset($input['studentCount'])) 
+    {
+        // Obtener cantidad de estudiantes para una materia
+        $count = getStudentCountBySubject($conn, $input['id']);
+        echo json_encode(["id" => $input['id'], "studentCount" => $count]);
+    }
+    elseif (isset($input['id'])) 
     {
         $subject = getSubjectById($conn, $input['id']);
         echo json_encode($subject);
@@ -71,6 +77,14 @@ function handlePut($conn)
 function handleDelete($conn) 
 {
     $input = json_decode(file_get_contents("php://input"), true);
+    
+    // Verificar si la materia tiene estudiantes asignados
+    $studentCount = getStudentCountBySubject($conn, $input['id']);
+    if ($studentCount > 0) {
+        http_response_code(409); // Conflict
+        echo json_encode(["error" => "No se puede eliminar la materia porque tiene " . $studentCount . " estudiante(s) asignado(s)"]);
+        return;
+    }
     
     $result = deleteSubject($conn, $input['id']);
     if ($result['deleted'] > 0) 

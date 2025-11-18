@@ -64,6 +64,18 @@ function updateSubject($conn, $id, $name)
     return ['updated' => $stmt->affected_rows];
 }
 
+function getStudentCountBySubject($conn, $id)
+{
+    $sql = "SELECT COUNT(*) as count FROM students_subjects WHERE subject_id = ?";
+    $stmt = $conn->prepare($sql);
+    $stmt->bind_param("i", $id);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    $row = $result->fetch_assoc();
+    
+    return $row['count'];
+}
+
 function deleteSubject($conn, $id) 
 {
     $sql = "DELETE FROM subjects WHERE id = ?";

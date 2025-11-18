@@ -145,11 +145,21 @@ async function confirmDeleteSubject(id)
 
     try
     {
+        // Verificar primero si la materia tiene estudiantes asignados
+        const response = await subjectsAPI.getStudentCount(id);
+        
+        if (response.studentCount > 0) {
+            alert(`No se puede eliminar esta materia porque tiene ${response.studentCount} estudiante(s) asignado(s).`);
+            return;
+        }
+        
+        // Si no tiene estudiantes, proceder con la eliminación
         await subjectsAPI.remove(id);
         loadSubjects();
     }
     catch (err)
     {
+        alert('Error: ' + err.message);
         console.error('Error al borrar materia:', err.message);
     }
 }
