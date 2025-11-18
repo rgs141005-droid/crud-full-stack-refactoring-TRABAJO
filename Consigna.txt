@@ -1,0 +1,4 @@
+4) Validar que no se pueda borrar un estudiante si este está presente en una asignación.
+-- Validar en el frontend y en el backend, debe aparecer un mensaje de error 
+-- informando la asignación, puede ser en un alert, un elemento W3.CSS Modal
+-- o un diseño de preferencia personal.

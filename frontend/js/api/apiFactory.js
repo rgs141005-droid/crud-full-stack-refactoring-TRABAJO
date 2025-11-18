@@ -33,6 +33,19 @@ export function createAPI(moduleName, config = {})
             throw new Error(errMsg);
         }
         return await res.json();
+            // Intentar leer el JSON de error del backend
+            let errBody = { error: res.statusText };
+            try {
+                errBody = await res.json();
+            } catch (e) {
+                // Si no es JSON válido, usar el texto de estado HTTP
+            }
+            // Lanzar el error con el cuerpo para que el caller lo capture
+            const error = new Error(errBody.error || `Error en ${method}`);
+            error.body = errBody;
+            error.status = res.status;
+            throw error;
+        }
     }
 
     return {

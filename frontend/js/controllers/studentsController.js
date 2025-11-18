@@ -152,7 +152,7 @@ function createActionsCell(student)
     const deleteBtn = document.createElement('button');
     deleteBtn.textContent = 'Borrar';
     deleteBtn.className = 'w3-button w3-red w3-small w3-margin-left';
-    deleteBtn.addEventListener('click', () => confirmDelete(student.id));
+    deleteBtn.addEventListener('click', () => confirmDelete(student));
   
     td.appendChild(editBtn);
     td.appendChild(deleteBtn);
@@ -167,18 +167,24 @@ function fillForm(student)
     document.getElementById('age').value = student.age;
 }
   
-async function confirmDelete(id) 
-{
-    if (!confirm('¿Estás seguro que deseas borrar este estudiante?')) return;
-  
-    try 
-    {
-        await studentsAPI.remove(id);
-        loadStudents();
-    } 
-    catch (err) 
-    {
-        console.error('Error al borrar:', err.message);
+async function confirmDelete(student) {
+    if (!confirm(`¿Eliminar al estudiante "${student.fullname}"?`)) return;
+
+    try {
+        await studentsAPI.remove(student.id);
+        await loadStudents();
+    } catch (err) {
+        const body = err.body || { error: err.message || 'Error' };
+
+        if (body.assignments && Array.isArray(body.assignments) && body.assignments.length > 0) {
+            const list = body.assignments.map(a => {
+                return `- ${a.subject_name ?? a.name ?? ('ID:' + (a.subject_id ?? a.id ?? '?'))}`;
+            }).join('\n');
+
+            alert(`No se puede eliminar el estudiante porque tiene las siguientes asignaciones:\n\n${list}`);
+        } else {
+            alert(body.error || 'Ocurrió un error al intentar eliminar el estudiante');
+        }
     }
 }
   
