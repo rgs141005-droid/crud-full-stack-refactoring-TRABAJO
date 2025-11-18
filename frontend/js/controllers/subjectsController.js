@@ -9,10 +9,10 @@
 */
 
 import { subjectsAPI } from '../api/subjectsAPI.js';
-import { studentsSubjectsAPI } from '../api/studentsSubjectsAPI.js';
 
 let debounceTimer = null;
 let currentEditingId = '';
+let originalName = '';
 
 document.addEventListener('DOMContentLoaded', () => 
 {
@@ -145,15 +145,6 @@ async function confirmDeleteSubject(id)
 
     try
     {
-        // Verificar primero si la materia tiene estudiantes asignados
-        const response = await subjectsAPI.getStudentCount(id);
-        
-        if (response.studentCount > 0) {
-            alert(`No se puede eliminar esta materia porque tiene ${response.studentCount} estudiante(s) asignado(s).`);
-            return;
-        }
-        
-        // Si no tiene estudiantes, proceder con la eliminación
         await subjectsAPI.remove(id);
         loadSubjects();
     }
@@ -164,6 +155,7 @@ async function confirmDeleteSubject(id)
     }
 }
 
+//
 
 function setupNameValidation() {
     const nameInput = document.getElementById('name');

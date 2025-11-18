@@ -55,10 +55,6 @@ export function createAPI(moduleName, config = {})
         async remove(id)
         {
             return await sendJSON('DELETE', { id });
-        },
-        async getStudentCount(id)
-        {
-            return await sendJSON('GET', { id, studentCount: true });
         }
     };
 }
