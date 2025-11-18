@@ -77,6 +77,8 @@ function handlePut($conn)
 function handleDelete($conn) 
 {
     $input = json_decode(file_get_contents("php://input"), true);
+   // mofificacion  
+    $count = countStudentsBySubject($conn, $input['id']);//cuenta cuantos alumnos hay en la materia 
     
     // Verificar si la materia tiene estudiantes asignados
     $studentCount = getStudentCountBySubject($conn, $input['id']);

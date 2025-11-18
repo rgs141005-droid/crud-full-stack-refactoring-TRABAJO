@@ -85,4 +85,27 @@ function deleteSubject($conn, $id)
 
     return ['deleted' => $stmt->affected_rows];
 }
+
+function countStudentsBySubject($conn, $subject_id)
+{
+    $sql = "SELECT COUNT(*) as count FROM students_subjects WHERE subject_id = ?";
+    $stmt = $conn->prepare($sql);
+    if ($stmt === false) {
+        return 0;
+    }
+
+    $stmt->bind_param("i", $subject_id);
+    if (!$stmt->execute()) {
+        return 0;
+    }
+
+    $result = $stmt->get_result();
+    if ($result === false) {
+        return 0;
+    }
+
+    $row = $result->fetch_assoc();
+
+    return isset($row['count']) ? (int)$row['count'] : 0;
+}
 ?>

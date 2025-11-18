@@ -9,10 +9,10 @@
 */
 
 import { subjectsAPI } from '../api/subjectsAPI.js';
+import { studentsSubjectsAPI } from '../api/studentsSubjectsAPI.js';
 
 let debounceTimer = null;
 let currentEditingId = '';
-let originalName = '';
 
 document.addEventListener('DOMContentLoaded', () => 
 {
@@ -164,7 +164,6 @@ async function confirmDeleteSubject(id)
     }
 }
 
-//
 
 function setupNameValidation() {
     const nameInput = document.getElementById('name');
