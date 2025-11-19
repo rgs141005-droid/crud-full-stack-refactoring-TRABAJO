@@ -22,19 +22,17 @@ export function createAPI(moduleName, config = {})
         });
 
         if (!res.ok) {
-            // Intentar leer el JSON de error del backend
-            let errBody = { error: res.statusText };
+            // Intentar parsear mensaje de error devuelto por el servidor
+            let errMsg = `Error en ${method} - ${res.status}`;
             try {
-                errBody = await res.json();
+                const body = await res.json();
+                errMsg = body.error || body.message || errMsg;
             } catch (e) {
-                // Si no es JSON válido, usar el texto de estado HTTP
+                // ignore parse error
             }
-            // Lanzar el error con el cuerpo para que el caller lo capture
-            const error = new Error(errBody.error || `Error en ${method}`);
-            error.body = errBody;
-            error.status = res.status;
-            throw error;
+            throw new Error(errMsg);
         }
+        return await res.json();
     }
 
     return {

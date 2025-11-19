@@ -10,6 +10,8 @@
 
 import { studentsAPI } from '../api/studentsAPI.js';
 
+let currentStudents = [];  // agregado 
+
 document.addEventListener('DOMContentLoaded', () => 
 {
     loadStudents();
@@ -33,6 +35,14 @@ function setupFormHandler()
             } 
             else 
             {
+                // Validación en frontend: verificar email duplicado
+                const exists = currentStudents.some(s => s.email && s.email.toLowerCase() === student.email.toLowerCase());
+                if (exists) {
+                    // Mostrar mensaje personalizado en modal
+                    showErrorModal('Este email ya está siendo utilizado');
+                    return;
+                }
+
                 await studentsAPI.create(student);
             }
             clearForm();
@@ -40,7 +50,14 @@ function setupFormHandler()
         }
         catch (err)
         {
-            console.error(err.message);
+            // Mostrar mensaje de error al usuario
+            // Si el error proviene del backend por correo duplicado, mostrar mensaje específico
+            const msg = (err && err.message) ? err.message.toLowerCase() : '';
+            if (msg.includes('correo') || msg.includes('email')) {
+                showErrorModal('Este email ya está siendo utilizado');
+            } else {
+                showErrorModal(err.message || 'Ocurrió un error');
+            }
         }
     });
 }
@@ -52,6 +69,20 @@ function setupCancelHandler()
     {
         document.getElementById('studentId').value = '';
     });
+}
+
+// Mostrar modal de error personalizado
+function showErrorModal(message)
+{
+    const modal = document.getElementById('errorModal');
+    const msg = document.getElementById('errorModalMessage');
+    msg.textContent = message;
+    modal.style.display = 'block';
+
+    // Cerrar solo con el botón
+    const btnClose = document.getElementById('errorModalBtnClose');
+    const hide = () => modal.style.display = 'none';
+    btnClose.onclick = hide;
 }
   
 function getFormData()
@@ -75,7 +106,8 @@ async function loadStudents()
     try 
     {
         const students = await studentsAPI.fetchAll();
-        renderStudentTable(students);
+        currentStudents = students || [];
+        renderStudentTable(currentStudents);
     } 
     catch (err) 
     {
@@ -120,7 +152,7 @@ function createActionsCell(student)
     const deleteBtn = document.createElement('button');
     deleteBtn.textContent = 'Borrar';
     deleteBtn.className = 'w3-button w3-red w3-small w3-margin-left';
-    deleteBtn.addEventListener('click', () => confirmDelete(student));
+    deleteBtn.addEventListener('click', () => confirmDelete(student.id));
   
     td.appendChild(editBtn);
     td.appendChild(deleteBtn);
@@ -135,24 +167,18 @@ function fillForm(student)
     document.getElementById('age').value = student.age;
 }
   
-async function confirmDelete(student) {
-    if (!confirm(`¿Eliminar al estudiante "${student.fullname}"?`)) return;
-
-    try {
-        await studentsAPI.remove(student.id);
-        await loadStudents();
-    } catch (err) {
-        const body = err.body || { error: err.message || 'Error' };
-
-        if (body.assignments && Array.isArray(body.assignments) && body.assignments.length > 0) {
-            const list = body.assignments.map(a => {
-                return `- ${a.subject_name ?? a.name ?? ('ID:' + (a.subject_id ?? a.id ?? '?'))}`;
-            }).join('\n');
-
-            alert(`No se puede eliminar el estudiante porque tiene las siguientes asignaciones:\n\n${list}`);
-        } else {
-            alert(body.error || 'Ocurrió un error al intentar eliminar el estudiante');
-        }
+async function confirmDelete(id) 
+{
+    if (!confirm('¿Estás seguro que deseas borrar este estudiante?')) return;
+  
+    try 
+    {
+        await studentsAPI.remove(id);
+        loadStudents();
+    } 
+    catch (err) 
+    {
+        console.error('Error al borrar:', err.message);
     }
 }
   
