@@ -78,10 +78,10 @@ function handleDelete($conn)
 {
     $input = json_decode(file_get_contents("php://input"), true);
    // mofificacion  
-    $count = countStudentsBySubject($conn, $input['id']);//cuenta cuantos alumnos hay en la materia 
+   // $count = countStudentsBySubject($conn, $input['id']);//cuenta cuantos alumnos hay en la materia 
     
     // Verificar si la materia tiene estudiantes asignados
-    $studentCount = getStudentCountBySubject($conn, $input['id']);
+    $studentCount = countStudentsBySubject($conn, $input['id']);
     if ($studentCount > 0) {
         http_response_code(409); // Conflict
         echo json_encode(["error" => "No se puede eliminar la materia porque tiene " . $studentCount . " estudiante(s) asignado(s)"]);
